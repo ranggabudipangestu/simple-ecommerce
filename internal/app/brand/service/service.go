@@ -54,6 +54,9 @@ func (s *Service) Create(ctx context.Context, payload dto.InsertBrandDto) (res *
 }
 
 func (s *Service) CheckBrandById(ctx context.Context, id int) (res *util.Response) {
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+
 	//Check Brand By Title
 	filter := dto.FilterBrandDto{ID: id, Limit: 1}
 
@@ -67,5 +70,5 @@ func (s *Service) CheckBrandById(ctx context.Context, id int) (res *util.Respons
 		return res.ReturnedData(false, http.StatusNotFound, "Brand Id doesn't exists", nil)
 	}
 
-	return res.ReturnedData(true, http.StatusOK, "Brand Already Exists", nil)
+	return res.ReturnedData(true, http.StatusOK, "success", brand[0])
 }
