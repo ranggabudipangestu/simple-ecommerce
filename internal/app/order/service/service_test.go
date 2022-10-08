@@ -22,14 +22,16 @@ import (
 
 const contextTimeout = 2 * time.Second
 
-var mockProduct []ProductDto.GetProduct
-var mockGetOrder *dto.GetOrderDto
-var mockOrderRepository = new(mockOrderRepositories.OrderRepository)
-var mockProductRepository = new(mockProductRepositores.ProductRepository)
-var mockBrandRepository = new(mockBrandRepositores.BrandRepository)
-var brandService = BrandService.NewBrandService(mockBrandRepository, contextTimeout)
-var productService = ProductService.NewProductService(mockProductRepository, brandService, contextTimeout)
-var orderService = OrderService.NewOrderService(mockOrderRepository, productService, contextTimeout)
+var (
+	mockProduct           []ProductDto.GetProduct
+	mockGetOrder          *dto.GetOrderDto
+	mockOrderRepository   = new(mockOrderRepositories.OrderRepository)
+	mockProductRepository = new(mockProductRepositores.ProductRepository)
+	mockBrandRepository   = new(mockBrandRepositores.BrandRepository)
+	brandService          = BrandService.NewBrandService(mockBrandRepository, contextTimeout)
+	productService        = ProductService.NewProductService(mockProductRepository, brandService, contextTimeout)
+	orderService          = OrderService.NewOrderService(mockOrderRepository, productService, contextTimeout)
+)
 
 func reset() {
 	mockProduct = []ProductDto.GetProduct{}
