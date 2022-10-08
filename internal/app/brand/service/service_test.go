@@ -3,12 +3,11 @@ package service_test
 import (
 	"context"
 	"errors"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/dto"
-	mockRepositories "github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/mocks/repository"
+	mockRepositories "github.com/ranggabudipangestu/simple-ecommerce/internal/mocks/app/brand/repository"
 
 	"github.com/go-faker/faker/v4"
 	service "github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/service"
@@ -39,12 +38,11 @@ func TestBrandCheckById(t *testing.T) {
 		filter := dto.FilterBrandDto{ID: 1, Limit: 1}
 		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, nil)
 
-		res := brandService.CheckBrandById(context.TODO(), 1)
+		res, err, state := brandService.CheckBrandById(context.TODO(), 1)
 
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.True(t, res.Success)
-		assert.Equal(t, "success", res.Message)
-		assert.NotNil(t, res.Data)
+		assert.Equal(t, "SUCCESS", state)
+		assert.NotNil(t, res)
+		assert.Nil(t, err)
 	})
 
 	t.Run("Test Brand By ID Database Error", func(t *testing.T) {
@@ -53,12 +51,11 @@ func TestBrandCheckById(t *testing.T) {
 		brandService := service.NewBrandService(mockRepository, contextTimeout)
 		filter := dto.FilterBrandDto{ID: 1, Limit: 1}
 		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, errors.New("Database Error"))
-		res := brandService.CheckBrandById(context.TODO(), 1)
+		res, err, state := brandService.CheckBrandById(context.TODO(), 1)
 
-		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
-		assert.False(t, res.Success)
-		assert.Equal(t, "Database Error", res.Message)
-		assert.Nil(t, res.Data)
+		assert.Equal(t, "SYSTEM_ERROR", state)
+		assert.Nil(t, res)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("Test Brand By ID Not Found", func(t *testing.T) {
@@ -67,12 +64,11 @@ func TestBrandCheckById(t *testing.T) {
 		brandService := service.NewBrandService(mockRepository, contextTimeout)
 		filter := dto.FilterBrandDto{ID: 1, Limit: 1}
 		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, nil)
-		res := brandService.CheckBrandById(context.TODO(), 1)
+		res, err, state := brandService.CheckBrandById(context.TODO(), 1)
 
-		assert.Equal(t, http.StatusNotFound, res.StatusCode)
-		assert.False(t, res.Success)
-		assert.Equal(t, "Brand Id doesn't exists", res.Message)
-		assert.Nil(t, res.Data)
+		assert.Equal(t, "NOT_FOUND", state)
+		assert.Nil(t, res)
+		assert.NotNil(t, err)
 	})
 }
 
@@ -98,12 +94,11 @@ func TestBrandCreate(t *testing.T) {
 		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, nil)
 		mockRepository.On("Create", mock.Anything, payload).Return(&model.Brand{ID: 1}, nil)
 
-		res := brandService.Create(context.Background(), payload)
+		res, err, state := brandService.Create(context.Background(), payload)
 
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.True(t, res.Success)
-		assert.Equal(t, "success", res.Message)
-		assert.Equal(t, map[string]interface{}{"id": 1}, res.Data)
+		assert.Equal(t, map[string]interface{}{"id": 1}, res)
+		assert.Equal(t, "SUCCESS", state)
+		assert.Nil(t, err)
 	})
 
 	t.Run("Test Brand Create Already Exists", func(t *testing.T) {
@@ -121,55 +116,11 @@ func TestBrandCreate(t *testing.T) {
 		mockRepository.On("Create", mock.Anything, payload).Return(&model.Brand{ID: 1}, nil)
 
 		brandService := service.NewBrandService(mockRepository, contextTimeout)
-		res := brandService.Create(context.Background(), payload)
+		res, err, state := brandService.Create(context.Background(), payload)
 
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-		assert.False(t, res.Success)
-		assert.Equal(t, "Brand Already Exists", res.Message)
-		assert.Nil(t, res.Data)
-	})
-
-	t.Run("Test Brand Create Error DB Get Brand", func(t *testing.T) {
-		defer reset()
-
-		err := faker.FakeData(&mockBrand)
-		assert.NoError(t, err)
-
-		payload := dto.InsertBrandDto{}
-		err = faker.FakeData(&payload)
-		assert.NoError(t, err)
-
-		filter := dto.FilterBrandDto{Title: payload.Title, Limit: 1}
-		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, errors.New("Database Error"))
-		mockRepository.On("Create", mock.Anything, payload).Return(&model.Brand{ID: 1}, nil)
-
-		brandService := service.NewBrandService(mockRepository, contextTimeout)
-		res := brandService.Create(context.Background(), payload)
-
-		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
-		assert.False(t, res.Success)
-		assert.Equal(t, "Database Error", res.Message)
-		assert.Nil(t, res.Data)
-	})
-
-	t.Run("Test Brand Create Error DB Create Brand", func(t *testing.T) {
-		defer reset()
-
-		payload := dto.InsertBrandDto{}
-		err := faker.FakeData(&payload)
-		assert.NoError(t, err)
-
-		filter := dto.FilterBrandDto{Title: payload.Title, Limit: 1}
-		mockRepository.On("GetBrand", mock.Anything, filter).Return(mockBrand, nil)
-		mockRepository.On("Create", mock.Anything, payload).Return(nil, errors.New("Database Error"))
-
-		brandService := service.NewBrandService(mockRepository, contextTimeout)
-		res := brandService.Create(context.Background(), payload)
-
-		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
-		assert.False(t, res.Success)
-		assert.Equal(t, "Database Error", res.Message)
-		assert.Nil(t, res.Data)
+		assert.Nil(t, res)
+		assert.NotNil(t, err)
+		assert.Equal(t, "DUPLICATE", state)
 	})
 
 }

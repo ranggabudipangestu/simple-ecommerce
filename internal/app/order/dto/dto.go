@@ -1,11 +1,10 @@
 package dto
 
 type CreateOrderDto struct {
-	TransactionNumber string
-	DeliveryAddress   string               `json:"deliveryAddress" validate:"required"`
-	Details           []CreateOrderDetails `json:"details" validate:"required"`
-	TotalTransaction  float32
-	TotalQty          int
+	DeliveryAddress  string               `json:"deliveryAddress" validate:"required"`
+	Details          []CreateOrderDetails `json:"details" validate:"required"`
+	TotalTransaction float32
+	TotalQty         int
 }
 
 type CreateOrderDetails struct {

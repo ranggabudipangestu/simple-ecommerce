@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"net/http"
+	"errors"
 	"time"
 
 	brandService "github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/service"
@@ -12,9 +12,9 @@ import (
 )
 
 type ProductService interface {
-	Create(ctx context.Context, dto dto.InsertProductDto) (res *util.Response)
-	GetProductById(ctx context.Context, id int) (res *util.Response)
-	GetProductByBrand(ctx context.Context, brandId int) (res *util.Response)
+	Create(ctx context.Context, dto dto.InsertProductDto) (interface{}, error, string)
+	GetProductById(ctx context.Context, id int) (*dto.GetProduct, error, string)
+	GetProductByBrand(ctx context.Context, brandId int) (interface{}, error, string)
 }
 
 type Service struct {
@@ -31,24 +31,24 @@ func NewProductService(repository repository.ProductRepository, brandService bra
 	}
 }
 
-func (s *Service) Create(ctx context.Context, payload dto.InsertProductDto) (res *util.Response) {
+func (s *Service) Create(ctx context.Context, payload dto.InsertProductDto) (interface{}, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
 	//check brandId exists or not
-	brandResult := s.brandService.CheckBrandById(ctx, payload.BrandId)
-	if !brandResult.Success {
-		return res.ReturnedData(false, brandResult.StatusCode, brandResult.Message, nil)
+	_, err, state := s.brandService.CheckBrandById(ctx, payload.BrandId)
+	if err != nil {
+		return nil, err, state
 	}
+
 	result, err := s.productRepository.Create(ctx, payload)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusBadRequest, err.Error(), nil)
+		return nil, err, "SYSTEM_ERROR"
 	}
-
-	return res.ReturnedData(true, http.StatusOK, "success", map[string]interface{}{"id": result.ID})
+	return map[string]interface{}{"id": result.ID}, nil, util.SUCCESS
 }
 
-func (s *Service) GetProductById(ctx context.Context, id int) (res *util.Response) {
+func (s *Service) GetProductById(ctx context.Context, id int) (*dto.GetProduct, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
@@ -56,20 +56,20 @@ func (s *Service) GetProductById(ctx context.Context, id int) (res *util.Respons
 
 	result, err := s.productRepository.GetProduct(ctx, filter)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
 	var data *dto.GetProduct = nil
 	if len(result) == 0 {
-		return res.ReturnedData(true, http.StatusNotFound, "Product Data Not Found", data)
+		return nil, errors.New("Product Not Found"), util.NOT_FOUND
 
 	}
 
 	data = &result[0]
-	return res.ReturnedData(true, http.StatusOK, "success", data)
+	return data, nil, util.SUCCESS
 }
 
-func (s *Service) GetProductByBrand(ctx context.Context, brandId int) (res *util.Response) {
+func (s *Service) GetProductByBrand(ctx context.Context, brandId int) (interface{}, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
@@ -77,12 +77,12 @@ func (s *Service) GetProductByBrand(ctx context.Context, brandId int) (res *util
 
 	result, err := s.productRepository.GetProduct(ctx, filter)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusBadRequest, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
 	if len(result) == 0 {
-		return res.ReturnedData(true, http.StatusNotFound, "Product Data Not Found", result)
+		return nil, errors.New("Product Not Found"), util.NOT_FOUND
 	}
 
-	return res.ReturnedData(true, http.StatusOK, "success", result)
+	return result, nil, util.SUCCESS
 }

@@ -36,46 +36,50 @@ func NewProductHandler(mux *http.ServeMux, service service.ProductService) {
 
 }
 
-func (b *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (b *ProductHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	var res *util.Response
 
 	var payload dto.InsertProductDto
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		res.JSON(w, http.StatusInternalServerError, res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil))
-		return
+		return res.JSON(w, false, util.GetResCode("SYSTEM_ERROR"), err.Error(), nil)
 	}
 
 	var valid bool
 	if valid, err = isRequestValid(&payload); !valid {
-		res.JSON(w, http.StatusInternalServerError, res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil))
-		return
+		return res.JSON(w, false, util.GetResCode("VALIDATION_ERROR"), err.Error(), nil)
+
 	}
 
-	result := b.productService.Create(r.Context(), payload)
-
-	res.JSON(w, result.StatusCode, result)
-	return
+	result, err, state := b.productService.Create(r.Context(), payload)
+	if err != nil {
+		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
+	}
+	return res.JSON(w, true, util.GetResCode(state), "Success", result)
 }
 
-func (b *ProductHandler) GetProductById(w http.ResponseWriter, r *http.Request) {
+func (b *ProductHandler) GetProductById(w http.ResponseWriter, r *http.Request) error {
 	var res *util.Response
 	ParamId := r.URL.Query().Get("id")
 	id, _ := strconv.Atoi(ParamId)
-	result := b.productService.GetProductById(r.Context(), id)
+	result, err, state := b.productService.GetProductById(r.Context(), id)
 
-	res.JSON(w, result.StatusCode, result)
-	return
+	if err != nil {
+		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
+	}
+	return res.JSON(w, true, util.GetResCode(state), "Success", result)
 }
 
-func (b *ProductHandler) GetProductByBrand(w http.ResponseWriter, r *http.Request) {
+func (b *ProductHandler) GetProductByBrand(w http.ResponseWriter, r *http.Request) error {
 	var res *util.Response
 	ParamId := r.URL.Query().Get("id")
 	id, _ := strconv.Atoi(ParamId)
-	result := b.productService.GetProductByBrand(r.Context(), id)
+	result, err, state := b.productService.GetProductByBrand(r.Context(), id)
 
-	res.JSON(w, result.StatusCode, result)
-	return
+	if err != nil {
+		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
+	}
+	return res.JSON(w, false, util.GetResCode(state), "Success", result)
 }
 
 func isRequestValid(dto *dto.InsertProductDto) (bool, error) {

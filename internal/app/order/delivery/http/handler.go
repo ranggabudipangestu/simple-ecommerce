@@ -13,11 +13,11 @@ import (
 )
 
 type OrderHandler struct {
-	orderService service.OrderService
+	OrderService service.OrderService
 }
 
 func NewOrderHandler(mux *http.ServeMux, service service.OrderService) {
-	handler := OrderHandler{orderService: service}
+	handler := OrderHandler{OrderService: service}
 
 	mux.HandleFunc("/order", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -31,44 +31,45 @@ func NewOrderHandler(mux *http.ServeMux, service service.OrderService) {
 
 }
 
-func (b *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+func (b *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) error {
 	var res *util.Response
 
 	var payload dto.CreateOrderDto
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
 	if err != nil {
-		res.JSON(w, http.StatusInternalServerError, res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil))
-		return
+		return res.JSON(w, false, util.GetResCode(util.SYSTEM_ERROR), err.Error(), nil)
 	}
 
 	var valid bool
 	if valid, err = isRequestValid(&payload); !valid {
-		res.JSON(w, http.StatusInternalServerError, res.ReturnedData(false, http.StatusBadRequest, err.Error(), nil))
-		return
+		return res.JSON(w, false, util.GetResCode(util.VALIDATION_ERROR), err.Error(), nil)
 	}
 
 	for i, detail := range payload.Details {
 		if valid, err = isDetailsRequestIsValid(&detail); !valid {
 			errMessage := fmt.Sprintf("Error row %s with details %s", strconv.Itoa(i+1), err.Error())
-			res.JSON(w, http.StatusInternalServerError, res.ReturnedData(false, http.StatusBadRequest, errMessage, nil))
-			return
+			return res.JSON(w, false, util.GetResCode(util.VALIDATION_ERROR), errMessage, nil)
 		}
 	}
-	result := b.orderService.CreateOrder(r.Context(), payload)
+	result, err, state := b.OrderService.CreateOrder(r.Context(), payload)
 
-	res.JSON(w, result.StatusCode, result)
-	return
+	if err != nil {
+		return res.JSON(w, false, util.GetResCode(state), err.Error(), nil)
+	}
+	return res.JSON(w, true, util.GetResCode(state), "success", result)
 }
 
-func (b *OrderHandler) GetOrderDetails(w http.ResponseWriter, r *http.Request) {
+func (b *OrderHandler) GetOrderDetails(w http.ResponseWriter, r *http.Request) error {
 	var res *util.Response
 
 	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-	result := b.orderService.GetOrderDetails(r.Context(), id)
+	result, err, state := b.OrderService.GetOrderDetails(r.Context(), id)
 
-	res.JSON(w, result.StatusCode, result)
-	return
+	if err != nil {
+		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
+	}
+	return res.JSON(w, true, util.GetResCode(state), "success", result)
 }
 
 func isRequestValid(payload *dto.CreateOrderDto) (bool, error) {

@@ -2,17 +2,18 @@ package service
 
 import (
 	"context"
-	"net/http"
+	"errors"
 	"time"
 
 	"github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/dto"
 	"github.com/ranggabudipangestu/simple-ecommerce/internal/app/brand/repository"
+	"github.com/ranggabudipangestu/simple-ecommerce/internal/model"
 	"github.com/ranggabudipangestu/simple-ecommerce/pkg/util"
 )
 
 type BrandService interface {
-	Create(ctx context.Context, payload dto.InsertBrandDto) (res *util.Response)
-	CheckBrandById(ctx context.Context, id int) (res *util.Response)
+	Create(ctx context.Context, payload dto.InsertBrandDto) (interface{}, error, string)
+	CheckBrandById(ctx context.Context, id int) (*model.Brand, error, string)
 }
 
 type Service struct {
@@ -27,7 +28,7 @@ func NewBrandService(r repository.BrandRepository, timeout time.Duration) BrandS
 	}
 }
 
-func (s *Service) Create(ctx context.Context, payload dto.InsertBrandDto) (res *util.Response) {
+func (s *Service) Create(ctx context.Context, payload dto.InsertBrandDto) (interface{}, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
@@ -36,24 +37,24 @@ func (s *Service) Create(ctx context.Context, payload dto.InsertBrandDto) (res *
 
 	brand, err := s.brandRepository.GetBrand(ctx, filter)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
 	//if brand exists
 	if len(brand) > 0 {
-		return res.ReturnedData(false, http.StatusBadRequest, "Brand Already Exists", nil)
+		return nil, errors.New("Brand title already Exists"), "DUPLICATE"
 	}
 
 	//Create Brand
 	result, err := s.brandRepository.Create(ctx, payload)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
-	return res.ReturnedData(true, http.StatusOK, "success", map[string]interface{}{"id": result.ID})
+	return map[string]interface{}{"id": result.ID}, nil, util.SUCCESS
 }
 
-func (s *Service) CheckBrandById(ctx context.Context, id int) (res *util.Response) {
+func (s *Service) CheckBrandById(ctx context.Context, id int) (*model.Brand, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
@@ -62,13 +63,13 @@ func (s *Service) CheckBrandById(ctx context.Context, id int) (res *util.Respons
 
 	brand, err := s.brandRepository.GetBrand(ctx, filter)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
 	//if brand exists
 	if len(brand) == 0 {
-		return res.ReturnedData(false, http.StatusNotFound, "Brand Id doesn't exists", nil)
+		return nil, errors.New("Brand Id Doesn't exists"), "NOT_FOUND"
 	}
 
-	return res.ReturnedData(true, http.StatusOK, "success", brand[0])
+	return &brand[0], nil, util.SUCCESS
 }

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"net/http"
+	"errors"
 	"time"
 
 	"github.com/ranggabudipangestu/simple-ecommerce/internal/app/order/dto"
@@ -15,8 +15,8 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (res *util.Response)
-	GetOrderDetails(ctx context.Context, id int) (res *util.Response)
+	CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (interface{}, error, string)
+	GetOrderDetails(ctx context.Context, id int) (*dto.GetOrderDto, error, string)
 }
 
 type Service struct {
@@ -33,18 +33,17 @@ func NewOrderService(repository repository.OrderRepository, productService produ
 	}
 }
 
-func (s *Service) CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (res *util.Response) {
+func (s *Service) CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (interface{}, error, string) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
-	payload.TransactionNumber = helper.GenerateTransactionNumber()
 	for i, detail := range payload.Details {
-		productResult := s.productService.GetProductById(ctx, detail.ProductId)
-		if !productResult.Success {
-			return res.ReturnedData(false, productResult.StatusCode, productResult.Message, nil)
+		productResult, err, state := s.productService.GetProductById(ctx, detail.ProductId)
+		if err != nil {
+			return nil, err, state
 		}
 
-		byteData, _ := json.Marshal(productResult.Data)
+		byteData, _ := json.Marshal(productResult)
 		receivedProduct := &model.Product{}
 		json.Unmarshal(byteData, receivedProduct)
 
@@ -54,15 +53,16 @@ func (s *Service) CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (
 		payload.TotalQty += detail.Qty
 	}
 
-	result, err := s.orderRepository.CreateOrder(ctx, payload)
+	transactionNumber := helper.GenerateTransactionNumber()
+	result, err := s.orderRepository.CreateOrder(ctx, payload, transactionNumber)
 	if err != nil {
-		return res.ReturnedData(false, http.StatusInternalServerError, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
 
-	return res.ReturnedData(true, http.StatusOK, "success", map[string]interface{}{"id": result.ID, "transactionNumber": payload.TransactionNumber})
+	return map[string]interface{}{"id": result.ID, "transactionNumber": transactionNumber}, nil, util.SUCCESS
 }
 
-func (s *Service) GetOrderDetails(ctx context.Context, id int) (res *util.Response) {
+func (s *Service) GetOrderDetails(ctx context.Context, id int) (*dto.GetOrderDto, error, string) {
 
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
@@ -70,13 +70,10 @@ func (s *Service) GetOrderDetails(ctx context.Context, id int) (res *util.Respon
 	result, err := s.orderRepository.GetOrderDetails(ctx, id)
 
 	if err != nil {
-		code := 0
-		if err.Error() == "Not Found" {
-			code = http.StatusNotFound
-		} else {
-			code = http.StatusInternalServerError
-		}
-		return res.ReturnedData(false, code, err.Error(), nil)
+		return nil, err, util.SYSTEM_ERROR
 	}
-	return res.ReturnedData(true, http.StatusOK, "success", result)
+	if result == nil {
+		return nil, errors.New("Order Not Found"), util.NOT_FOUND
+	}
+	return result, nil, util.SUCCESS
 }

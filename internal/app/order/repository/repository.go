@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,7 +11,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(ctx context.Context, dto dto.CreateOrderDto) (*model.Transaction, error)
+	CreateOrder(ctx context.Context, dto dto.CreateOrderDto, transactionNumber string) (*model.Transaction, error)
 	GetOrderDetails(ctx context.Context, id int) (*dto.GetOrderDto, error)
 }
 
@@ -24,13 +23,13 @@ func NewOrder(db *sql.DB) *Repository {
 	return &Repository{db}
 }
 
-func (r *Repository) CreateOrder(ctx context.Context, payload dto.CreateOrderDto) (*model.Transaction, error) {
+func (r *Repository) CreateOrder(ctx context.Context, payload dto.CreateOrderDto, transactionNumber string) (*model.Transaction, error) {
 
 	tx, err := r.DB.BeginTx(ctx, &sql.TxOptions{})
 
 	//PROCESS ORDER
 	query := `INSERT into transaction (transactionNumber, deliveryAddress, totalQty, totalTransaction, createdAt) values(?, ?, ?, ?, NOW())`
-	result, err := tx.ExecContext(ctx, query, payload.TransactionNumber, payload.DeliveryAddress, payload.TotalQty, payload.TotalTransaction)
+	result, err := tx.ExecContext(ctx, query, transactionNumber, payload.DeliveryAddress, payload.TotalQty, payload.TotalTransaction)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -81,7 +80,7 @@ func (r *Repository) GetOrderDetails(ctx context.Context, id int) (*dto.GetOrder
 
 	var data dto.GetOrderDto
 	if !row.Next() {
-		return nil, errors.New("Not Found")
+		return nil, nil
 	}
 
 	err = row.Scan(
