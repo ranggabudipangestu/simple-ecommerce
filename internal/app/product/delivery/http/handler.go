@@ -12,11 +12,11 @@ import (
 )
 
 type ProductHandler struct {
-	productService service.ProductService
+	ProductService service.ProductService
 }
 
 func NewProductHandler(mux *http.ServeMux, service service.ProductService) {
-	handler := ProductHandler{productService: service}
+	handler := ProductHandler{ProductService: service}
 
 	mux.HandleFunc("/product", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -51,7 +51,7 @@ func (b *ProductHandler) Create(w http.ResponseWriter, r *http.Request) error {
 
 	}
 
-	result, err, state := b.productService.Create(r.Context(), payload)
+	result, err, state := b.ProductService.Create(r.Context(), payload)
 	if err != nil {
 		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
 	}
@@ -62,7 +62,7 @@ func (b *ProductHandler) GetProductById(w http.ResponseWriter, r *http.Request) 
 	var res *util.Response
 	ParamId := r.URL.Query().Get("id")
 	id, _ := strconv.Atoi(ParamId)
-	result, err, state := b.productService.GetProductById(r.Context(), id)
+	result, err, state := b.ProductService.GetProductById(r.Context(), id)
 
 	if err != nil {
 		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
@@ -74,7 +74,7 @@ func (b *ProductHandler) GetProductByBrand(w http.ResponseWriter, r *http.Reques
 	var res *util.Response
 	ParamId := r.URL.Query().Get("id")
 	id, _ := strconv.Atoi(ParamId)
-	result, err, state := b.productService.GetProductByBrand(r.Context(), id)
+	result, err, state := b.ProductService.GetProductByBrand(r.Context(), id)
 
 	if err != nil {
 		return res.JSON(w, false, util.GetResCode(state), err.Error(), result)
