@@ -104,7 +104,7 @@ func TestCreateProduct(t *testing.T) {
 		Price:       1250000,
 	}
 
-	t.Run("Test Create Brand Success", func(t *testing.T) {
+	t.Run("Test Create Product Success", func(t *testing.T) {
 
 		mock.ExpectExec(query).WithArgs(payload.Title, payload.Description, payload.BrandId, payload.Price).WillReturnResult(sqlmock.NewResult(1, 1))
 		r := repository.NewProduct(db)
@@ -114,7 +114,7 @@ func TestCreateProduct(t *testing.T) {
 		assert.NotNil(t, result)
 	})
 
-	t.Run("Test Create Brand Error Database", func(t *testing.T) {
+	t.Run("Test Create Product Error Database", func(t *testing.T) {
 
 		mock.ExpectExec(query).WithArgs(payload.Title, payload.Description, payload.BrandId, payload.Price).WillReturnError(errors.New("Database Error"))
 		r := repository.NewProduct(db)

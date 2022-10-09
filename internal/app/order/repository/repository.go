@@ -110,6 +110,9 @@ func (r *Repository) GetOrderDetails(ctx context.Context, id int) (*dto.GetOrder
 	ORDER BY transaction_detail.id`
 
 	detailRows, err := r.DB.QueryContext(ctx, queryDetail, id)
+	if err != nil {
+		return nil, err
+	}
 	for detailRows.Next() {
 		transactionDetail := dto.GetOrderDetails{}
 		err = detailRows.Scan(
