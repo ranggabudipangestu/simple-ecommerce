@@ -67,4 +67,40 @@ func TestCreateBrand(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
 	})
+	t.Run("Test Create Product No Payload", func(t *testing.T) {
+		defer reset()
+
+		brandHttp.NewBrandHandlers(mux, mockService)
+		handler := brandHttp.BrandHandler{BrandService: mockService}
+
+		req := httptest.NewRequest(http.MethodPost, "/brand", nil)
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		err = handler.Create(w, req)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	})
+
+	t.Run("Test Create Product Validation Body", func(t *testing.T) {
+		defer reset()
+
+		payload := dto.InsertBrandDto{
+			Title: "",
+		}
+
+		j, err = json.Marshal(payload)
+		assert.NoError(t, err)
+
+		brandHttp.NewBrandHandlers(mux, mockService)
+		handler := brandHttp.BrandHandler{BrandService: mockService}
+
+		req := httptest.NewRequest(http.MethodPost, "/brand", strings.NewReader(string(j)))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		err = handler.Create(w, req)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	})
 }

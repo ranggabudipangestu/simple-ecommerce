@@ -87,6 +87,77 @@ func TestCreateOrder(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 
 	})
+
+	t.Run("Test Create Failed No Payload", func(t *testing.T) {
+		defer reset()
+
+		orderHttp.NewOrderHandler(mux, mockService)
+		handler := orderHttp.OrderHandler{OrderService: mockService}
+
+		req := httptest.NewRequest(http.MethodPost, "/order", nil)
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		err = handler.CreateOrder(w, req)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	})
+
+	t.Run("Test Create Order Failed Validation Body", func(t *testing.T) {
+		defer reset()
+
+		var newOrderDetail []dto.CreateOrderDetails
+		newOrderDetail = append(newOrderDetail, dto.CreateOrderDetails{
+			ProductId: 0,
+			Qty:       0,
+		})
+		payload := dto.CreateOrderDto{
+			DeliveryAddress: "",
+			Details:         newOrderDetail,
+		}
+
+		j, err = json.Marshal(payload)
+		assert.NoError(t, err)
+
+		orderHttp.NewOrderHandler(mux, mockService)
+		handler := orderHttp.OrderHandler{OrderService: mockService}
+
+		req := httptest.NewRequest(http.MethodPost, "/order", strings.NewReader(string(j)))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		err = handler.CreateOrder(w, req)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	})
+
+	t.Run("Test Create Order Failed Validation Details", func(t *testing.T) {
+		defer reset()
+
+		var newOrderDetail []dto.CreateOrderDetails
+		newOrderDetail = append(newOrderDetail, dto.CreateOrderDetails{
+			ProductId: 0,
+			Qty:       0,
+		})
+		payload := dto.CreateOrderDto{
+			DeliveryAddress: "Garuda Street",
+			Details:         newOrderDetail,
+		}
+
+		j, err = json.Marshal(payload)
+		assert.NoError(t, err)
+
+		orderHttp.NewOrderHandler(mux, mockService)
+		handler := orderHttp.OrderHandler{OrderService: mockService}
+
+		req := httptest.NewRequest(http.MethodPost, "/order", strings.NewReader(string(j)))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		err = handler.CreateOrder(w, req)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	})
 }
 
 func TestGetOrderDetails(t *testing.T) {
