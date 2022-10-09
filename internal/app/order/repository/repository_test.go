@@ -123,6 +123,16 @@ func TestGetOrderDetail(t *testing.T) {
 		assert.Nil(t, result)
 	})
 
+	t.Run("Test Get Order Detail not found", func(t *testing.T) {
+		orderRow := sqlmock.NewRows([]string{"id", "transactionNumber", "deliveryAddres", "totalQty", "totalTransaction"})
+		mock.ExpectQuery(query).WithArgs(1).WillReturnRows(orderRow)
+		r := repository.NewOrder(db)
+		result, err := r.GetOrderDetails(context.TODO(), 1)
+
+		assert.Nil(t, err)
+		assert.Nil(t, result)
+	})
+
 	t.Run("Test Get Order Detail Error Get Order Detail", func(t *testing.T) {
 		err = faker.FakeData(&mockOrder)
 		assert.NoError(t, err)
