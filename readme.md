@@ -57,7 +57,7 @@ To run this project, you will need to add the following environment variables in
 #### Create Brand
 
 ```http
-  POST /api/brand
+  POST /brand
 ```
 
 | Body | Type     | Description                |
@@ -67,7 +67,7 @@ To run this project, you will need to add the following environment variables in
 #### Create Product
 
 ```http
-  POST /api/product
+  POST /product
 ```
 
 | Body | Type     | Description                       |
@@ -81,7 +81,7 @@ To run this project, you will need to add the following environment variables in
 #### Get Product By Id
 
 ```http
-  GET /api/product?id=1
+  GET /product?id=1
 ```
 
 | Query Params | Type     | Description                       |
@@ -92,7 +92,7 @@ To run this project, you will need to add the following environment variables in
 #### Get Product By Brand
 
 ```http
-  GET /api/product/brand?id=1
+  GET /product/brand?id=1
 ```
 
 | Query Params | Type     | Description                       |
@@ -103,7 +103,7 @@ To run this project, you will need to add the following environment variables in
 #### Create Order
 
 ```http
-  POST /api/order
+  POST /order
 ```
 | Body | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
@@ -120,7 +120,7 @@ To run this project, you will need to add the following environment variables in
 #### Get Order By Id
 
 ```http
-  GET /api/order?id=1
+  GET /order?id=1
 ```
 
 | Query Params | Type     | Description                       |
