@@ -28,7 +28,7 @@ To run this project, you will need to add the following environment variables in
 ## Installation
 
 1. Install makefile first
-2. install golang migrate for running database migration. checkout here for detailshttps://github.com/golang-migrate/migrate
+2. Install golang migrate for running database migration. Checkout <a href="https://github.com/golang-migrate/migrate">here</a> for details
 3. Install MySQL Driver
 
 ## Running Migration
@@ -100,7 +100,6 @@ To run this project, you will need to add the following environment variables in
 | `id`      | `int` | **Required**. Your Brand Id |
 
 
-
 #### Create Order
 
 ```http
@@ -117,4 +116,15 @@ To run this project, you will need to add the following environment variables in
 | `productId`      | `Int` | **Required**. Your Product |
 | `qty`      | `Int` | **Required**. Qty you want to buy |
 
-I'm attached postman documentation in this repo too. You can check simple-ecommerce.postman_collection.json file for detail
+
+#### Get Order By Id
+
+```http
+  GET /api/order?id=1
+```
+
+| Query Params | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `id`      | `int` | **Required**. Your Order Id |
+
+I'm attached postman documentation in this repo too. You can check simple-ecommerce.postman_collection.json file for detail.
