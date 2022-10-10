@@ -12,7 +12,6 @@ type FilterProductDto struct {
 	BrandId     int    `json:"brandId" validate:"required"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	Skip        int    `json:"skip"`
 	Limit       int    `json:"limit"`
 }
 

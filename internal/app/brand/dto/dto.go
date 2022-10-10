@@ -7,7 +7,6 @@ type InsertBrandDto struct {
 type FilterBrandDto struct {
 	ID    int    `json:"int"`
 	Title string `json:"title"`
-	Skip  int    `json:"skip"`
 	Limit int    `json:"limit"`
 }
 
