@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ranggabudipangestu/simple-ecommerce/database"
 	"github.com/ranggabudipangestu/simple-ecommerce/internal/factory"
@@ -19,9 +21,11 @@ func main() {
 
 	factory.RegisterHandlers(mux, db)
 
-	log.Println("Listening...")
+	port := fmt.Sprintf(`:%s`, os.Getenv("APP_PORT"))
+	log.Println("Listening Server On Port " + port)
 
-	err = http.ListenAndServe(":3000", mux)
+	err = http.ListenAndServe(port, mux)
+
 	if err != nil {
 		log.Fatalln("Failed to start Server")
 	}

@@ -3,7 +3,6 @@ CREATE TABLE product  (
   title varchar(100) NOT NULL,
   description varchar(255) NULL DEFAULT NULL,
   brandId int(11) NOT NULL,
-  stock double NOT NULL DEFAULT 0,
   price double(10, 2) NOT NULL DEFAULT 0,
   createdAt datetime(0) NOT NULL ON UPDATE CURRENT_TIMESTAMP(0),
   updatedAt datetime(0) NOT NULL ON UPDATE CURRENT_TIMESTAMP(0),
