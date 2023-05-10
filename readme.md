@@ -1,13 +1,3 @@
-
-# Catalyst Take Home Test
-
-Here is result of catalyst take home test. I named it simple-ecommerce.
-On this Project, I'm using MySQL as DBMS. Using mockery for mocking unit test. And, implementing clean architecture.
-
-## Here is my Database Design
-![Table Design](db_design/table_design.png)
-
-
 ## Environment Variables
 
 To run this project, you will need to add the following environment variables in your OS Env
